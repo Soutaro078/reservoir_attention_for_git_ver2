@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  reservoir_attention:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+    command: ["python", "main.py"]
+
+# version: '3.8'
+
+# services:
+#   transforming_dynamical_systems:
+#     build: .
+#     volumes:
+#       - .:/app
+#     command: python main.py

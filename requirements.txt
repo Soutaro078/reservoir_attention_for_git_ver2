@@ -1,0 +1,11 @@
+numpy<2
+matplotlib
+scipy
+networkx
+scikit-learn
+torch==1.13.1
+torchvision==0.14.1
+torchaudio==0.13.1
+tqdm
+git+https://github.com/Soutaro078/echo_torch.git
+
