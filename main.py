@@ -63,8 +63,8 @@ def compare_spectra(model: nn.Module, test_data: np.ndarray, enc_seq_len: int, d
     prediction = prediction.squeeze()
     ax1.plot(prediction[:, 0], prediction[:, 1], prediction[:, 2], color="red", label="Generated Trajectory")
     ax1.set_title("Generated Trajectory", fontsize=12)
-    fig1_path = "/app/result/lorenz96_reservoir_attention_generated_trajectory.svg"  # SVG形式で保存
-    plt.savefig(fig1_path, format='svg')
+    fig1_path = "/app/result/lorenz96_reservoir_attention_generated_trajectory.pdf"  # PDF形式で保存
+    plt.savefig(fig1_path, format='pdf')
     plt.show()
 
     # パワースペクトルを保存
@@ -77,8 +77,8 @@ def compare_spectra(model: nn.Module, test_data: np.ndarray, enc_seq_len: int, d
     ax2.legend(frameon=False, fontsize=10)
     ax2.set_title("Powerspectra", fontsize=12)
     plt.tight_layout()
-    fig2_path = "/app/result/lorenz96_reservoir_attention_powerspectra.svg"  # SVG形式で保存
-    plt.savefig(fig2_path, format='svg')
+    fig2_path = "/app/result/lorenz96_reservoir_attention_powerspectra.pdf"  # PDF形式で保存
+    plt.savefig(fig2_path, format='pdf')
     plt.show()
 
     return prediction, ps_error
@@ -175,7 +175,7 @@ def train(
     plt.ylabel('MSE')
     plt.title('Training Loss over Epochs')
     plt.grid(True)
-    plt.savefig('/app/result/training_loss_01.svg', format='svg')  # SVG形式で保存
+    plt.savefig('/app/result/training_loss_01.pdf', format='pdf')  # PDF形式で保存
     plt.show()
 
     return model
