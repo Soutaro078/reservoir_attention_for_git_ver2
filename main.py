@@ -204,6 +204,7 @@ if __name__ == "__main__":
     test_data = np.load('/app/data/lorenz96_test.npy')
 
     prediction, ps_error = compare_spectra(model, test_data, enc_seq_len=10, dec_seq_len=4, sigma=0.1)
+    print(test_data.shape)
     print("Prediction and power spectrum error calculated.")
 
 
