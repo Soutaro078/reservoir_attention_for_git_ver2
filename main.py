@@ -103,14 +103,14 @@ def train(
 ) -> nn.Module:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     train_dataset = TransformerDataset(fpath, enc_seq_len, target_seq_len)
-    print(train_dataset.shape)  # デバッグ用
+    print(f"Train dataset size: {len(train_dataset)}")  # デバッグ用
     train_loader = DataLoader(train_dataset, batchsize)
     enc_mask = train_dataset.enc_mask
     dec_mask = train_dataset.dec_mask
 
     input_dim = d_obs
-    hidden_dim = d_model
-    output_dim = d_model
+    hidden_dim = d_obs
+    output_dim = d_obs
     leaky_rate = 0.1
     spectral_radius = 0.99
 
@@ -126,7 +126,7 @@ def train(
         w_generator=w_generator,
         win_generator=win_generator,
         wbias_generator=wbias_generator,
-        washout=20  # 適切なwashout値を設定
+        washout=0  # 適切なwashout値を設定
     )
 
     model = ReservoirWithAttention(

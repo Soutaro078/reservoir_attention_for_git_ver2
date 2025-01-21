@@ -31,46 +31,46 @@ class TransformerDecoder(nn.Module):
         dec_output = self.output_layer(x)
         return dec_output
 
-class TransformerEncoderLayer_New(nn.TransformerEncoderLayer):
-    def __init__(self, d_model, nhead, esn, dim_feedforward=2048, dropout=0.1, activation="relu", batch_first=False, norm_first=False, **kwargs):
-        super(TransformerEncoderLayer_New, self).__init__(d_model, nhead, dim_feedforward=dim_feedforward, dropout=dropout, activation=activation, batch_first=batch_first, norm_first=norm_first, **kwargs)
-        self.esn = esn
-        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=batch_first, **kwargs)
-        # Implementation of Feedforward model
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(dim_feedforward, d_model)
+# class TransformerEncoderLayer_New(nn.TransformerEncoderLayer):
+#     def __init__(self, d_model, nhead, esn, dim_feedforward=2048, dropout=0.1, activation="relu", batch_first=False, norm_first=False, **kwargs):
+#         super(TransformerEncoderLayer_New, self).__init__(d_model, nhead, dim_feedforward=dim_feedforward, dropout=dropout, activation=activation, batch_first=batch_first, norm_first=norm_first, **kwargs)
+#         self.esn = esn
+#         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=batch_first, **kwargs)
+#         # Implementation of Feedforward model
+#         self.linear1 = nn.Linear(d_model, dim_feedforward)
+#         self.dropout = nn.Dropout(dropout)
+#         self.linear2 = nn.Linear(dim_feedforward, d_model)
 
-        self.norm_first = norm_first
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
+#         self.norm_first = norm_first
+#         self.norm1 = nn.LayerNorm(d_model)
+#         self.norm2 = nn.LayerNorm(d_model)
+#         self.dropout1 = nn.Dropout(dropout)
+#         self.dropout2 = nn.Dropout(dropout)
 
-        self.activation = nn.functional.relu if activation == "relu" else nn.functional.gelu
+#         self.activation = nn.functional.relu if activation == "relu" else nn.functional.gelu
 
-    def forward(self, src, src_mask=None, src_key_padding_mask=None):
-        # ESN の forward メソッドを呼び出して Wout を通した後の出力を取得
-        esn_output = self.esn(src)  # 直接 ESN の出力を取得
-        if self.norm_first:
-            x = esn_output + self._sa_block(self.norm1(esn_output), src_mask, src_key_padding_mask)
-            x = x + self._ff_block(self.norm2(x))
-        else:
-            x = self.norm1(esn_output + self._sa_block(esn_output, src_mask, src_key_padding_mask))
-            x = self.norm2(x + self._ff_block(x))
-        return x
+#     def forward(self, src, src_mask=None, src_key_padding_mask=None):
+#         # ESN の forward メソッドを呼び出して Wout を通した後の出力を取得
+#         esn_output = self.esn(src)  # 直接 ESN の出力を取得
+#         if self.norm_first:
+#             x = esn_output + self._sa_block(self.norm1(esn_output), src_mask, src_key_padding_mask)
+#             x = x + self._ff_block(self.norm2(x))
+#         else:
+#             x = self.norm1(esn_output + self._sa_block(esn_output, src_mask, src_key_padding_mask))
+#             x = self.norm2(x + self._ff_block(x))
+#         return x
 
-    # Self-attention block
-    def _sa_block(self, x, attn_mask, key_padding_mask):
-        # attn_mask のサイズを調整
-        if attn_mask is not None and attn_mask.size() != (x.size(0), x.size(0)):
-            attn_mask = attn_mask.expand(x.size(0), x.size(0))
-        return self.self_attn(x, x, x, attn_mask=attn_mask, key_padding_mask=key_padding_mask)[0]
+#     # Self-attention block
+#     def _sa_block(self, x, attn_mask, key_padding_mask):
+#         # attn_mask のサイズを調整
+#         if attn_mask is not None and attn_mask.size() != (x.size(0), x.size(0)):
+#             attn_mask = attn_mask.expand(x.size(0), x.size(0))
+#         return self.self_attn(x, x, x, attn_mask=attn_mask, key_padding_mask=key_padding_mask)[0]
 
-    # Feed forward block
-    def _ff_block(self, x):
-        x = self.linear2(self.dropout(self.activation(self.linear1(x))))
-        return self.dropout2(x)
+#     # Feed forward block
+#     def _ff_block(self, x):
+#         x = self.linear2(self.dropout(self.activation(self.linear1(x))))
+#         return self.dropout2(x)
 
 # class ReservoirWithAttention(nn.Module):
 #     def __init__(self, seq_len, d_obs, d_model, num_heads, enc_num_layers, dec_num_layers, enc_dropout, dec_dropout, esn):
