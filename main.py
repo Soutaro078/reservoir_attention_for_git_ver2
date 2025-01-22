@@ -14,13 +14,18 @@ import echotorch.utils.matrix_generation as mg
 #ローレンツ96モデルの知識があれば十分
 
 def T_step_prediction(
-    model: nn.Module, initial_enc_input: torch.Tensor, initial_dec_input: torch.Tensor, enc_mask: torch.Tensor, dec_mask: torch.Tensor, T: int
+    model: nn.Module, initial_enc_input: torch.Tensor, initial_dec_input: torch.Tensor, enc_mask: torch.Tensor, dec_mask: torch.Tensor, T: int, device: torch.device
 ) -> torch.Tensor:
     # 最初の次元にバッチ次元を追加する
     if len(initial_enc_input.shape) < 3:
         initial_enc_input = initial_enc_input.unsqueeze(0)
     if len(initial_dec_input.shape) < 3:
         initial_dec_input = initial_dec_input.unsqueeze(0)
+
+    initial_enc_input = initial_enc_input.to(device)
+    initial_dec_input = initial_dec_input.to(device)
+    enc_mask = enc_mask.to(device)
+    dec_mask = dec_mask.to(device)
 
     prediction = initial_dec_input
 
@@ -29,7 +34,7 @@ def T_step_prediction(
 
     for t in range(T):
         seq_len = dec_input.size(1)
-        dec_mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+        dec_mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool().to(device)
         with torch.no_grad():
             dec_output = model(enc_input, dec_input, enc_mask=None, dec_mask=dec_mask)
         
@@ -39,21 +44,21 @@ def T_step_prediction(
 
     return prediction
 
-def compare_spectra(model: nn.Module, test_data: np.ndarray, enc_seq_len: int, dec_seq_len: int, sigma: float):
+def compare_spectra(model: nn.Module, test_data: np.ndarray, enc_seq_len: int, dec_seq_len: int, sigma: float, device: torch.device):
     if len(test_data.shape) < 3:
         test_data = test_data[None, :, :]
     print(test_data.shape)
-    initial_enc_input = torch.zeros((1, enc_seq_len, test_data.shape[-1]))
-    initial_dec_input = torch.randn((1, 1, test_data.shape[-1]))
-    enc_mask = torch.ones((enc_seq_len, enc_seq_len))
+    initial_enc_input = torch.zeros((1, enc_seq_len, test_data.shape[-1])).to(device)
+    initial_dec_input = torch.randn((1, 1, test_data.shape[-1])).to(device)
+    enc_mask = torch.ones((enc_seq_len, enc_seq_len)).to(device)
     if enc_mask.size(0) != enc_seq_len:
         enc_mask = enc_mask.expand(enc_seq_len, enc_seq_len)
-    dec_mask = torch.ones((dec_seq_len, dec_seq_len))
+    dec_mask = torch.ones((dec_seq_len, dec_seq_len)).to(device)
 
     prediction = T_step_prediction(
-        model, initial_enc_input, initial_dec_input, enc_mask, dec_mask, test_data.shape[1]
+        model, initial_enc_input, initial_dec_input, enc_mask, dec_mask, test_data.shape[1], device
     )
-    prediction = prediction[:, 1:, :].numpy()
+    prediction = prediction[:, 1:, :].cpu().numpy()
 
     ps_error = power_spectrum_error(prediction, test_data, sigma=sigma)
 
