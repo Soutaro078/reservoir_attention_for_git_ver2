@@ -58,6 +58,25 @@ def compare_spectra(model: nn.Module, test_data: np.ndarray, enc_seq_len: int, d
     ps_error = power_spectrum_error(prediction, test_data, sigma=sigma)
 
     # 生成したローレンツの軌跡を保存
+
+    # 生成されたローレンツの軌跡と真の軌跡を同じプロットに表示
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection="3d")
+    prediction = prediction.squeeze()
+    test_data = test_data.squeeze()
+
+    # 生成された軌跡をプロット
+    ax.plot(prediction[:, 0], prediction[:, 1], prediction[:, 2], color="red", label="Generated Trajectory")
+    # 真の軌跡をプロット
+    ax.plot(test_data[:, 0], test_data[:, 1], test_data[:, 2], color="blue", label="True Trajectory")
+
+    ax.set_title("Generated vs True Trajectory", fontsize=12)
+    ax.legend(frameon=False, fontsize=10)
+    fig_path = "/app/result/lorenz96_reservoir_attention_trajectory_comparison.pdf"  # PDF形式で保存
+    plt.savefig(fig_path, format='pdf')
+    plt.show()
+    
     fig1 = plt.figure(figsize=(10, 8))
     ax1 = fig1.add_subplot(111, projection="3d")
     prediction = prediction.squeeze()
@@ -76,9 +95,20 @@ def compare_spectra(model: nn.Module, test_data: np.ndarray, enc_seq_len: int, d
     ax2.set_xscale("log")
     ax2.legend(frameon=False, fontsize=10)
     ax2.set_title("Powerspectra", fontsize=12)
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Power Spectral Density")
     plt.tight_layout()
     fig2_path = "/app/result/lorenz96_reservoir_attention_powerspectra.pdf"  # PDF形式で保存
     plt.savefig(fig2_path, format='pdf')
+    plt.show()
+
+    fig3 = plt.figure(figsize=(10, 8))   
+    ax3 = fig3.add_subplot(222, projection="3d")
+    test_data = test_data.squeeze()
+    ax3.plot(test_data[:, 0], test_data[:, 1], test_data[:, 2], color="blue", label="True Trajectory")
+    ax3.set_title("True Trajectory", fontsize=12)
+    fig3_path = "/app/result/lorenz96_reservoir_attention_true_trajectory.pdf"  # PDF形式で保存
+    plt.savefig(fig3_path, format='pdf')
     plt.show()
 
     return prediction, ps_error
@@ -166,7 +196,9 @@ def train(
             optimizer.step()
         avg_loss = sum_loss / len(train_loader)
         mse_losses.append(avg_loss)
-        print(f"Epoch {epoch} Loss: {avg_loss}")
+        current_time = datetime.now().strftime("%H:%M:%S")
+        print(f"Epoch {epoch} Loss: {avg_loss} Time: {current_time}")
+        #print(f"Epoch {epoch} Loss: {avg_loss}")
 
     # エポックごとの MSE をプロット
     plt.figure()
@@ -175,7 +207,7 @@ def train(
     plt.ylabel('MSE')
     plt.title('Training Loss over Epochs')
     plt.grid(True)
-    plt.savefig('/app/result/training_loss_01.pdf', format='pdf')  # PDF形式で保存
+    plt.savefig('/app/result/transformer_training_loss_01.pdf', format='pdf')  # PDF形式で保存
     plt.show()
 
     return model
@@ -191,20 +223,22 @@ if __name__ == "__main__":
         num_heads=8,
         enc_num_layers=4,
         dec_num_layers=4,
-        num_epochs=1,
+        num_epochs=60,
         batchsize=512,
         enc_dropout=0.4,
         dec_dropout=0.4
     )
 
     os.makedirs('/app/result', exist_ok=True)
-    model_path = f"/app/result/lorenz96_reservoir_attention_{datetime.now():%Y%m%d_%H%M%S}.pt"
+    model_path = f"/app/result/lorenz96_transformer_attention_{datetime.now():%Y%m%d_%H%M%S}.pt"
     torch.save(model, model_path)
 
+    train_data2 = np.load('/app/data/lorenz96_on0.05_train.npy')
     test_data = np.load('/app/data/lorenz96_test.npy')
 
     prediction, ps_error = compare_spectra(model, test_data, enc_seq_len=10, dec_seq_len=4, sigma=0.1)
-    print(test_data.shape)
+    print(f'test_data: {test_data.shape}')
+    print(f'train_data_2: {train_data2.shape}')
     print("Prediction and power spectrum error calculated.")
 
 

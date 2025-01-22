@@ -109,14 +109,16 @@ class ReservoirWithAttention(nn.Module):
             self.esn._esn_cell.washout = 20  # 適切なwashout値を設定
 
     def forward(self, enc_input, dec_input, enc_mask, dec_mask):
-        print(f"enc_input size: {enc_input.size()}, dec_input size: {dec_input.size()}")  # デバッグ用
+        #print(f"enc_input size: {enc_input.size()}, dec_input size: {dec_input.size()}")  # デバッグ用
         # ESN に渡す前に次元を調整
         #esn_input = enc_input.view(-1, enc_input.size(2))
-        esn_output = self.esn(enc_input)
+        # esn_output = self.esn(enc_input)
+
         #esn_output = self.esn(esn_input)
-        print(f"esn_output size: {esn_output.size()}")  # デバッグ用
+        # print(f"esn_output size: {esn_output.size()}")  # デバッグ用
         #esn_output = esn_output.view(enc_input.size(0), enc_input.size(1), -1)
-        enc_output = self.encoder(esn_output)
+        enc_output = self.encoder(enc_input)
+        # enc_output = self.encoder(esn_output)
         dec_output = self.decoder(dec_input, enc_output, enc_mask, dec_mask)
         return dec_output
 
@@ -148,7 +150,7 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        print(f"x size: {x.size()}, self.pe size: {self.pe.size()}")  # デバッグ用
+        #print(f"x size: {x.size()}, self.pe size: {self.pe.size()}")  # デバッグ用
         x = x + self.pe[:x.size(0), :]
         return x
 
